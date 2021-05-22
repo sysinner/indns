@@ -1,0 +1,26 @@
+[Unit]
+Description=indns
+After=network.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+LimitNOFILE=4096
+ExecStart=/opt/sysinner/indns/bin/indnsd -log_dir /opt/sysinner/indns/var/log -minloglevel 1 -logtolevel true
+ExecReload=/bin/kill -HUP $MAINPID
+
+TimeoutStartSec=0
+
+KillMode=process
+
+Restart=always
+RestartSec=3
+
+StartLimitBurst=3
+StartLimitInterval=60s
+
+[Install]
+WantedBy=multi-user.target
+
+
