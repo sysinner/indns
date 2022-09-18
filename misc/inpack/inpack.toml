@@ -1,6 +1,6 @@
 [project]
 name = "indns"
-version = "0.1.0"
+version = "0.1.1"
 vendor = "sysinner.com"
 homepage = "https://github.com/sysinner/indns"
 groups = ["dev/sys-srv"]

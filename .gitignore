@@ -3,4 +3,5 @@ etc/
 var/
 .DS_Store
 batch-*
+go.sum
 

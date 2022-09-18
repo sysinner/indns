@@ -1,4 +1,4 @@
-# Copyright 2021 Eryx <evorui аt gmail dοt com>, All rights reserved.
+# Copyright 2021 Eryx <evorui at gmail dot com>, All rights reserved.
 #
 
 EXE_SERVER = bin/indnsd

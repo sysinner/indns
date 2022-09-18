@@ -1,4 +1,4 @@
-// Copyright 2021 Eryx <evorui аt gmail dοt com>, All rights reserved.
+// Copyright 2021 Eryx <evorui at gmail dot com>, All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package config
 import (
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 
@@ -56,7 +57,7 @@ func Setup(ver, rel string) error {
 	}
 	confFile = Prefix + "/etc/indnsd.toml"
 
-	if err := htoml.DecodeFromFile(&Config, confFile); err != nil && !os.IsNotExist(err) {
+	if err := htoml.DecodeFromFile(confFile, &Config); err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
@@ -66,6 +67,11 @@ func Setup(ver, rel string) error {
 
 	if Config.Server.ConfigDirectory == "" {
 		Config.Server.ConfigDirectory = Prefix + "/etc/conf.d"
+	}
+
+	{
+		exec.Command("systemd", "stop", "systemd-resolved").Output()
+		exec.Command("systemd", "disable", "systemd-resolved").Output()
 	}
 
 	return watcher()
@@ -167,7 +173,7 @@ func (it *ConfigRecordManager) setZone(v ConfigZone) error {
 
 func fileReload(path string) (*ConfigZone, error) {
 	var cfg ConfigZone
-	if err := htoml.DecodeFromFile(&cfg, path); err != nil {
+	if err := htoml.DecodeFromFile(path, &cfg); err != nil {
 		return nil, err
 	}
 	return &cfg, nil
