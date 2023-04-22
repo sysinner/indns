@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hooto/hlog4g/hlog"
@@ -36,6 +37,8 @@ type Resolver struct {
 	servers     map[string]bool
 	nameservers []string
 	caches      map[string]*ResolverRecordEntry
+	hit         uint64
+	mis         uint64
 }
 
 type ResolverRecordEntry struct {
@@ -145,6 +148,10 @@ func (it *Resolver) Lookup(network string, req *dns.Msg) (*dns.Msg, error) {
 		tn    = uint32(time.Now().Unix())
 	)
 
+	if it.hit > 0 && ((it.hit+it.mis)%10000) == 0 {
+		hlog.Printf("info", "records %d, hit %d, mis %d", len(it.caches), it.hit, it.mis)
+	}
+
 	{
 		it.mu.RLock()
 		if p, ok := it.caches[qName]; ok && p.ttl > tn {
@@ -155,6 +162,7 @@ func (it *Resolver) Lookup(network string, req *dns.Msg) (*dns.Msg, error) {
 		if hit != nil {
 			msg := *hit
 			msg.Id = req.Id
+			atomic.AddUint64(&it.hit, 1)
 			return &msg, nil
 		}
 	}
@@ -208,8 +216,8 @@ func (it *Resolver) Lookup(network string, req *dns.Msg) (*dns.Msg, error) {
 			ttl = v.Header().Ttl
 		}
 	}
-	if ttl < 60 {
-		ttl = 60
+	if ttl < 600 {
+		ttl = 600
 	} else if ttl > 86400 {
 		ttl = 86400
 	}
@@ -221,6 +229,8 @@ func (it *Resolver) Lookup(network string, req *dns.Msg) (*dns.Msg, error) {
 		ttl: ttl,
 	}
 	it.mu.Unlock()
+
+	atomic.AddUint64(&it.mis, 1)
 
 	return hit, nil
 }

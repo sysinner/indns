@@ -69,6 +69,8 @@ func Setup(ver, rel string) error {
 		Config.Server.ConfigDirectory = Prefix + "/etc/conf.d"
 	}
 
+	htoml.EncodeToFile(Config, confFile)
+
 	{
 		exec.Command("systemd", "stop", "systemd-resolved").Output()
 		exec.Command("systemd", "disable", "systemd-resolved").Output()
