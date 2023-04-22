@@ -39,6 +39,7 @@ type Resolver struct {
 	caches      map[string]*ResolverRecordEntry
 	hit         uint64
 	mis         uint64
+	err         uint64
 }
 
 type ResolverRecordEntry struct {
@@ -148,8 +149,8 @@ func (it *Resolver) Lookup(network string, req *dns.Msg) (*dns.Msg, error) {
 		tn    = uint32(time.Now().Unix())
 	)
 
-	if it.hit > 0 && ((it.hit+it.mis)%10000) == 0 {
-		hlog.Printf("info", "records %d, hit %d, mis %d", len(it.caches), it.hit, it.mis)
+	if it.hit > 0 && ((it.hit+it.mis+it.err)%10000) == 0 {
+		hlog.Printf("info", "records %d, hit %d, mis %d, err %d", len(it.caches), it.hit, it.mis, it.err)
 	}
 
 	{
@@ -206,6 +207,7 @@ func (it *Resolver) Lookup(network string, req *dns.Msg) (*dns.Msg, error) {
 		}
 
 		if hit == nil {
+			atomic.AddUint64(&it.err, 1)
 			return nil, errors.New("timeout")
 		}
 	}
